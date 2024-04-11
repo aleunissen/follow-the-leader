@@ -9,7 +9,7 @@ from launch.actions import (
     ExecuteProcess,
 )
 from launch.launch_description_sources import AnyLaunchDescriptionSource
-from launch.conditions import IfCondition, UnlessCondition, LaunchConfigurationEquals
+from launch.conditions import IfCondition, UnlessCondition
 from launch.substitutions import LaunchConfiguration, PythonExpression, AndSubstitution
 from ament_index_python.packages import get_package_share_directory
 from launch_ros.actions import Node
@@ -22,7 +22,7 @@ def generate_launch_description():
     load_core = LaunchConfiguration("load_core")
     use_sim = LaunchConfiguration("use_sim")
     launch_blender = LaunchConfiguration("launch_blender")
-    camera_type = LaunchConfiguration("camera_type")
+    camera_type = LaunchConfiguration("camera_type", default="d435")
 
     package_dir = get_package_share_directory("follow_the_leader")
     params_path = os.path.join(package_dir, "config")
@@ -37,7 +37,7 @@ def generate_launch_description():
 
     camera_params_arg = DeclareLaunchArgument(
         name="camera_type",
-        default_value=camera_yaml_path,  # TODO: get this value from the orig launch file? Or declare it in the other file
+        default_value="d435",  # TODO: get this value from the orig launch file? Or declare it in the other file
         description="Path to the YAML file containing camera parameters",
     )
 
@@ -46,7 +46,7 @@ def generate_launch_description():
             os.path.join(get_package_share_directory("realsense2_camera"), "launch/rs_launch.py")
         ),
         launch_arguments=[
-            ("enable_depth", "false"),
+            ("enable_depth", "true"),
             ("pointcloud.enable", "false"),
             ("rgb_camera.profile", "424x240x30"),
             # ("rgb_camera.profile", "640x480x30"),
@@ -78,7 +78,7 @@ def generate_launch_description():
     ur_type_arg = DeclareLaunchArgument(
         "ur_type", default_value="ur3", description="Robot description name (consistent with ur_control.launch.py)"
     )
-    robot_ip_arg = DeclareLaunchArgument("robot_ip", default_value="169.254.174.50", description="Robot IP")
+    robot_ip_arg = DeclareLaunchArgument("robot_ip", default_value="172.17.0.2", description="Robot IP")
     load_core_arg = DeclareLaunchArgument(
         "load_core",
         default_value="true",

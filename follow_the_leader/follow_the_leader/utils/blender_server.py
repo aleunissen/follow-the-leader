@@ -44,7 +44,7 @@ class ImageServer(Node):
             "side_branch_range", [0.325, 0.70]
         )  # TODO: RETRIEVE FROM PARAM SERVER
         self.side_branch_length = self.declare_parameter("side_branch_length", 0.06)
-        self.camera_topic_name = self.declare_parameter("camera_topic_name", Parameter.Type.STRING)
+        self.camera_topic_name = self.declare_parameter("camera_topic_name", "/camera/color/image_raw")
 
         self.tree_id = 0
         self.num_branches = 1
