@@ -4,7 +4,7 @@ import rclpy
 import numpy as np
 from std_msgs.msg import Header, Empty, ColorRGBA
 from sensor_msgs.msg import Image, CameraInfo, PointCloud2
-from geometry_msgs.msg import Point
+from geometry_msgs.msg import Point, Pose, PoseArray
 from cv_bridge import CvBridge
 from visualization_msgs.msg import Marker, MarkerArray
 from skimage.measure import label
@@ -86,6 +86,7 @@ class Curve3DModeler(TFNode):
         self.tree_model_pub = self.create_publisher(TreeModel, "/tree_model", 1)
         self.rviz_model_pub = self.create_publisher(MarkerArray, "/curve_3d_rviz_array", 1)
         self.diag_image_pub = self.create_publisher(Image, "model_diagnostic", 1)
+        self.prune_pose_pub = self.create_publisher(PoseArray, "/prune_pose", 1)
         self.img_mask_sub = self.create_subscription(ImageMaskPair, "/image_mask_pair", self.process_mask, 1)
         self.img_sub = self.create_subscription(
             Image,
@@ -722,10 +723,14 @@ class Curve3DModeler(TFNode):
         marker.scale.x = 0.02
         marker.color = ColorRGBA(r=0.5, g=1.0, b=0.5, a=1.0)
         markers.markers.append(marker)
+        
+        prune_poses_msg = PoseArray()
+        prune_poses = []
 
         for i, side_branch in enumerate(self.current_side_branches, start=1):
             pts = side_branch.retrieve_points(filter_none=True)
 
+            # line strip representing side branch
             marker = Marker()
             marker.header.frame_id = self.camera.tf_frame
             marker.header.stamp = time
@@ -736,6 +741,40 @@ class Curve3DModeler(TFNode):
             marker.color = ColorRGBA(r=0.0, g=0.0, b=1.0, a=1.0)
             marker.points = [Point(x=p[0], y=p[1], z=p[2]) for p in pts]
             markers.markers.append(marker)
+
+            # point marker to visualize pruning location and publish it
+            branch_origin = pts[0,:]
+            prune_origin = pts[3,:] # points are 0.01m apart, so [3,:] means coordinates 3cm from branch origin
+            # marker = Marker()
+            # marker.header.frame_id = self.camera.tf_frame
+            # marker.header.stamp = time
+            # marker.ns = self.get_name()
+            # marker.id = i
+            # marker.type = Marker.SPHERE
+            # marker.pose.position = Point(x=prune_origin[0],y=prune_origin[1],z=prune_origin[2])
+            # marker.scale.x = 0.01
+            # marker.scale.y = 0.01
+            # marker.scale.z = 0.01
+            # marker.color = ColorRGBA(r=1.0, g=0.0, b=0.0, a=1.0)
+            # markers.markers.append(marker)
+
+            prune_pose = Pose()
+            prune_poses_msg.header.stamp = time
+            prune_poses_msg.header.frame_id = self.camera.tf_frame
+            prune_pose.position.x = prune_origin[0]
+            prune_pose.position.y = prune_origin[1]
+            prune_pose.position.z = prune_origin[2]
+            #TODO: correct prune orientation
+            prune_pose.orientation.x = 0.0
+            prune_pose.orientation.x = 0.0
+            prune_pose.orientation.x = 0.0
+            prune_pose.orientation.w = 1.0
+            prune_poses.append(prune_pose)
+
+        prune_poses_msg.poses = prune_poses
+        self.prune_pose_pub.publish(prune_poses_msg)
+
+
 
         self.rviz_model_pub.publish(markers)
 
