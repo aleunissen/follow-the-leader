@@ -168,7 +168,9 @@ class SimpleStateManager(Node):
 
     def handle_resource_switch(self, resource_mode):
         if self.base_ctrl_string is None or self.servo_ctrl_string is None:
-            raise Exception("Controllers have not been identified yet!")
+            self.resource_ready = True
+            return 
+            # raise Exception("Controllers have not been identified yet!")
 
         self.resource_ready = False
         if resource_mode == ResourceMode.DEFAULT:
