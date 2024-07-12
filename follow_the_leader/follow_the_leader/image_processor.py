@@ -12,6 +12,7 @@ from rclpy.executors import MultiThreadedExecutor
 from rclpy.parameter import Parameter
 from threading import Lock
 from scipy.spatial.transform import Rotation
+import cv2
 
 bridge = CvBridge()
 
@@ -21,7 +22,7 @@ class ImageProcessorNode(TFNode):
         super().__init__("image_processor_node", cam_info_topic="/camera/color/camera_info")
 
         # ROS2 params
-        self.movement_threshold = self.declare_parameter("movement_threshold", 0.0075)
+        self.movement_threshold = self.declare_parameter("movement_threshold", 0.075)
         self.base_frame = self.declare_parameter("base_frame", "base_link")
         self.camera_topic_name = self.declare_parameter("camera_topic_name", Parameter.Type.STRING)
 
@@ -110,11 +111,11 @@ class ImageProcessorNode(TFNode):
                 self.last_pose = tf_mat
             else:
                 # If the camera has rotated too much, we assume we get bad optical flows
-                rotation = Rotation.from_matrix(self.last_pose[:3, :3].T @ tf_mat[:3, :3]).as_euler("XYZ")
-                if np.linalg.norm(rotation) > np.radians(0.5):
-                    self.last_pose = tf_mat
-                    self.last_skipped = True
-                    return
+                # rotation = Rotation.from_matrix(self.last_pose[:3, :3].T @ tf_mat[:3, :3]).as_euler("XYZ")
+                # if np.linalg.norm(rotation) > np.radians(0.5):
+                #     self.last_pose = tf_mat
+                #     self.last_skipped = True
+                #     return
 
                 last_pos = self.last_pose[:3, 3]
                 diff = pos - last_pos
@@ -128,6 +129,17 @@ class ImageProcessorNode(TFNode):
 
         img = bridge.imgmsg_to_cv2(msg, desired_encoding="rgb8")
         mask = self.image_processor.process(img).mean(axis=2).astype(np.uint8)
+        # Create a black image with the same size as the mask
+        result = np.ones_like(mask)*255
+        # Define the left and right regions
+        left_region = (0, 0, 1*mask.shape[1] // 4, mask.shape[0])
+        right_region = (3 * mask.shape[1] // 4, 0, mask.shape[1], mask.shape[0])
+        # Fill the left and right regions with white color (255)
+        cv2.rectangle(result, left_region[:2], left_region[2:], (0), -1)
+        cv2.rectangle(result, right_region[:2], right_region[2:], (0), -1)
+        # Combine the mask and result image using bitwise AND
+        result = cv2.bitwise_and(result, mask)
+
         if self.just_activated:
             self.just_activated = False
             return
@@ -136,7 +148,7 @@ class ImageProcessorNode(TFNode):
             self.last_skipped = False
             return
 
-        mask_msg = bridge.cv2_to_imgmsg(mask, encoding="mono8")
+        mask_msg = bridge.cv2_to_imgmsg(result, encoding="mono8")
         mask_msg.header.stamp = msg.header.stamp
         image_mask_pair = ImageMaskPair(rgb=msg, mask=mask_msg, image_frame_offset=vec)
 
