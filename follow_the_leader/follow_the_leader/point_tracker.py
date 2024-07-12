@@ -3,6 +3,7 @@ import os.path
 
 import rclpy
 from rclpy.time import Time
+from rclpy.logging import get_logger
 import numpy as np
 from std_msgs.msg import Header
 from sensor_msgs.msg import Image, PointCloud2
@@ -73,9 +74,12 @@ class PointTracker(TFNode):
     def __init__(self):
         super().__init__("point_tracker_node", cam_info_topic="/camera/color/camera_info")
         # State variables
+
+        self.logger = get_logger("point_tracker")
+
         self.current_request = SharedData()
         self.image_queue = RotatingQueue(size=8)
-        self.back_image_queue = RotatingQueue(size=16)
+        self.back_image_queue = RotatingQueue(size=25)
         self.tracker = PipsTracker(
             model_dir=os.path.join(os.path.expanduser("~"), "follow-the-leader-deps", "pips", "pips", "reference_model")
         )
@@ -111,6 +115,7 @@ class PointTracker(TFNode):
         self.transition_sub = self.create_subscription(
             StateTransition, "state_transition", self.handle_state_transition, 1, callback_group=self.cb_reentrant
         )
+        self.logger.info("Point tracker node started")
         return
 
     def handle_state_transition(self, msg: StateTransition):
@@ -130,7 +135,7 @@ class PointTracker(TFNode):
 
     def handle_query_request(self, req: Query3DPoints.Request, resp: Query3DPoints.Response):
         with self.back_image_queue:
-            if len(self.back_image_queue) < 8:
+            if len(self.back_image_queue) < 2:
                 resp.success = False
                 return resp
             queue = self.back_image_queue.as_list()[::-1]
@@ -140,6 +145,9 @@ class PointTracker(TFNode):
         req_time = Time.from_msg(req_msg.image.header.stamp)
         to_proc = []
         for i in range(len(queue) - 6):
+            self.logger.info(f"req_time:{req_time}")
+            self.logger.info(f"que_time:{queue[i]['stamp']} statement:{req_time > queue[i]['stamp']}")
+            self.logger.info(f"Duration:{req_time - queue[i]['stamp']}")
             if req_time > queue[i]["stamp"]:
                 to_proc.append(self.process_image_info(req_msg.image))
                 to_proc.extend(queue[i : i + 7])
@@ -185,7 +193,7 @@ class PointTracker(TFNode):
         return np.concatenate(all_pts, axis=0), all_names
 
     def process_image_info(self, img_msg: Image):
-        stamp = Time.from_msg(img_msg.header.stamp)
+        stamp = Time.from_msg(img_msg.header.stamp) #self.get_clock().now() #Time.from_msg(img_msg.header.stamp)
         pose = None
         if self.do_3d_point_estimation:
             pose = self.lookup_transform(
@@ -202,6 +210,7 @@ class PointTracker(TFNode):
 
     def handle_image_callback(self, msg):
         if self.camera.tf_frame is None:
+            self.logger.info("camera_tf_frame is NONE!")
             return
 
         current_pos = self.lookup_transform(self.base_frame.value, self.camera.tf_frame, sync=False, as_matrix=True)[
@@ -210,8 +219,11 @@ class PointTracker(TFNode):
         if self.movement_threshold.value and (
             not (self.last_pos is None or np.linalg.norm(current_pos - self.last_pos) > self.movement_threshold.value)
         ):
+            
+            self.logger.info("Movement threshold not met")
             return
 
+        self.logger.info("Movement threshold met!")
         img_info = self.process_image_info(img_msg=msg)
         self.back_image_queue.append(img_info)
 
@@ -237,10 +249,10 @@ class PointTracker(TFNode):
             error = np.linalg.norm(trajs - reprojs, axis=2)
             avg_error = error.mean(axis=1)
             max_error = error.max(axis=1)
-            # print('Average pix error:\n')
-            # print(', '.join('{:.3f}'.format(x) for x in avg_error))
-            # print('Max pix error:\n')
-            # print(', '.join('{:.3f}'.format(x) for x in max_error))
+            print('Average pix error:\n')
+            print(', '.join('{:.3f}'.format(x) for x in avg_error))
+            print('Max pix error:\n')
+            print(', '.join('{:.3f}'.format(x) for x in max_error))
 
         trajs = np.transpose(trajs, (1, 0, 2))
 
