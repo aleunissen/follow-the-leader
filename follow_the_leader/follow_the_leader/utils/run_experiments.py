@@ -39,8 +39,8 @@ class ExperimentManagementNode(TFNode):
         self.folder = output_folder
 
         self.current_experiment = 0
-        self.num_branches = 0
-        self.custom_seed = None
+        self.num_branches = 3
+        self.custom_seed = 1
         self.bag_recording_proc = None
         self.save_counter = 0
 
