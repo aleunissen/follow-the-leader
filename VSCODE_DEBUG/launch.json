@@ -1,0 +1,68 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Current File",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "stopOnEntry": false,
+            "justMyCode": false  // Set justMyCode to false to stop at breakpoints in all files
+        },
+        {
+            "name": "Python: Offline Image Processor",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/follow-the-leader/follow_the_leader/follow_the_leader/offline_image_processor.py",
+            "console": "integratedTerminal",
+            "stopOnEntry": false,
+            "justMyCode": false  // Set justMyCode to false to stop at breakpoints in all files
+        },
+        {
+        "name": "Follow the leader Blender",
+        "type": "ros",
+        "request": "launch",
+        "target": "/home/ubuntu/FTL/src/follow-the-leader/follow_the_leader/launch/follow_the_leader.launch.py",
+        "arguments": ["ur_type:=ur5e","use_sim:=true","load_core:=true","launch_blender:=true","camera_type:=d435"]
+        },     
+        {
+        "name": "Follow the leader",
+        "type": "ros",
+        "request": "launch",
+        "target": "/home/ubuntu/FTL/src/follow-the-leader/follow_the_leader/launch/follow_the_leader.launch.py",
+        "arguments": ["ur_type:=ur5e","use_sim:=true","load_core:=true","launch_blender:=false","camera_type:=d435"]
+        },        
+        {
+        "name": "Core_ftl_3d",
+        "type": "ros",
+        "request": "launch",
+        "target": "/home/ubuntu/FTL/src/follow-the-leader/follow_the_leader/launch/core_only.launch.py",
+        "arguments": ["ur_type:=ur5e","camera_type:=d435"]
+        },          
+        {
+        "name": "Model_ftl_3d",
+        "type": "ros",
+        "request": "launch",
+        "target": "/home/ubuntu/FTL/src/follow-the-leader/follow_the_leader/launch/core_only.launch.py",
+        "arguments": ["ur_type:=ur5e","camera_type:=d405"]
+        },          
+        {
+        "name": "Blender",
+        "type": "ros",
+        "request": "launch",
+        "target": "/home/ubuntu/FTL/install/follow_the_leader/share/follow_the_leader/blender.launch.py",
+        "arguments": ["ur_type:=ur5e","use_sim:=true","load_core:=true","launch_blender:=true","camera_type:=d435"]
+        },           
+        {
+        "name": "run experiments.py",
+        "type": "debugpy",
+        "request": "launch",
+        "program": "/home/ubuntu/FTL/src/follow-the-leader/follow_the_leader/follow_the_leader/utils/run_experiments.py",
+        "args": ["ur5e", "1"]
+        },        
+    ]
+}
