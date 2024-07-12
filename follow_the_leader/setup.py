@@ -34,6 +34,7 @@ setup(
             "io_manager = follow_the_leader.io_manager:main",
             "state_manager = follow_the_leader.simple_state_manager:main",
             "blender = follow_the_leader.blender_server_wrapper:main",
+            "image_pub = follow_the_leader.offline_image_publisher:main",
         ],
     },
 )
