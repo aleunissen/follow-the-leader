@@ -9,6 +9,19 @@ from image_geometry import PinholeCameraModel
 from threading import Event, Lock
 from scipy.spatial.transform import Rotation
 import numpy as np
+from ament_index_python.packages import get_package_share_directory
+import rclpy_message_converter.message_converter as msgconvert
+import yaml
+
+
+def save_yaml(data, file_path):
+    with open(file_path, 'w') as file:
+        file.write(data)
+
+def load_yaml_string(file_path):
+    with open(file_path, 'r') as file:
+        yaml_string = file.read()
+    return yaml_string
 
 
 class PinholeCameraModelNP(PinholeCameraModel):
@@ -96,10 +109,23 @@ class TFNode(Node):
         self._params = {}
         self.camera = PinholeCameraModelNP()
         if cam_info_topic is not None:
+
+            msg = self.load_camera_info_to_msg()
+            self.camera.fromCameraInfo(msg)
+
             self._cam_info_sub = self.create_subscription(CameraInfo, cam_info_topic, self._handle_cam_info, 1)
+
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
         return
+    
+    def load_camera_info_to_msg(self):
+        pkg_folder = get_package_share_directory("follow_the_leader")
+        yaml_string = load_yaml_string(pkg_folder+"/config/camera_info_d405_low_res.yaml")
+        msgdict = yaml.load(yaml_string, Loader=yaml.FullLoader)
+        msg = msgconvert.convert_dictionary_to_ros_message(CameraInfo,msgdict)
+        return msg 
+
 
     def declare_parameter_dict(self, **kwargs):
         for key, val in kwargs.items():
@@ -110,7 +136,10 @@ class TFNode(Node):
         return self._params[key].value
 
     def _handle_cam_info(self, msg: CameraInfo):
-        self.camera.fromCameraInfo(msg)
+        
+        # print("doing nothing for now as initialization should have happened")
+        # msg = self.load_camera_info_to_msg()
+        # self.camera.fromCameraInfo(msg)
         return
 
     def lookup_transform(self, target_frame, source_frame, time=None, sync=True, as_matrix=False):

@@ -267,7 +267,7 @@ class Curve3DModeler(TFNode):
 
         self.update_info["stamp"] = stamp
         self.update_info["mask"] = mask
-        self.update_info["rgb"] = bridge.imgmsg_to_cv2(rgb_msg, desired_encoding="rgb8")
+        self.update_info["rgb"] = cv2.resize(bridge.imgmsg_to_cv2(rgb_msg, desired_encoding="rgb8"), (424, 240))
         self.update_info["rgb_msg"] = rgb_msg
         self.update_info["tf"] = self.get_camera_frame_pose(time=stamp)
         self.update_info["inv_tf"] = np.linalg.inv(self.update_info["tf"])
@@ -852,6 +852,8 @@ class Curve3DModeler(TFNode):
 
         header = msg.header
         img = bridge.imgmsg_to_cv2(msg, desired_encoding="rgb8") // 2
+        # Resize the image to 424x240
+        resized_image = cv2.resize(img, (424, 240))
         cam_frame = self.get_camera_frame_pose(header.stamp, position_only=False)
         inv_tf = np.linalg.inv(cam_frame)
 
@@ -859,15 +861,15 @@ class Curve3DModeler(TFNode):
         if not draw_px.size:
             return
 
-        cv2.polylines(img, [draw_px.reshape((-1, 1, 2))], False, (0, 0, 255), 3)
+        cv2.polylines(resized_image, [draw_px.reshape((-1, 1, 2))], False, (0, 0, 255), 3)
 
         for side_branch in self.current_side_branches:
             pxs = self.camera.project3dToPixel(side_branch.retrieve_points(filter_none=True)).astype(int)
             if not len(pxs):
                 continue
-            cv2.polylines(img, [pxs.reshape((-1, 1, 2))], False, (0, 255, 255), 3)
+            cv2.polylines(resized_image, [pxs.reshape((-1, 1, 2))], False, (0, 255, 255), 3)
 
-        new_img_msg = bridge.cv2_to_imgmsg(img.astype(np.uint8), encoding="rgb8", header=header)
+        new_img_msg = bridge.cv2_to_imgmsg(resized_image.astype(np.uint8), encoding="rgb8", header=header)
         self.diag_image_pub.publish(new_img_msg)
 
     def get_camera_frame_pose(self, time=None, position_only=False):

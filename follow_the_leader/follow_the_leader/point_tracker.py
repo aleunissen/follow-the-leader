@@ -26,6 +26,8 @@ from rclpy.callback_groups import MutuallyExclusiveCallbackGroup, ReentrantCallb
 from rclpy.parameter import Parameter
 from follow_the_leader.utils.ros_utils import TFNode, SharedData, process_list_as_dict
 from threading import Lock
+import cv2
+import tf2_ros
 
 bridge = CvBridge()
 
@@ -79,14 +81,14 @@ class PointTracker(TFNode):
 
         self.current_request = SharedData()
         self.image_queue = RotatingQueue(size=8)
-        self.back_image_queue = RotatingQueue(size=25)
+        self.back_image_queue = RotatingQueue(size=16)
         self.tracker = PipsTracker(
             model_dir=os.path.join(os.path.expanduser("~"), "follow-the-leader-deps", "pips", "pips", "reference_model")
         )
         self.last_pos = None
 
         # Config
-        self.movement_threshold = self.declare_parameter("movement_threshold", 0.0075 / 8)
+        self.movement_threshold = self.declare_parameter("movement_threshold", 0.01 / 8)
         self.base_frame = self.declare_parameter("base_frame", "base_link")
         self.min_points = self.declare_parameter("min_points", 4)
         self.do_3d_point_estimation = True
@@ -135,7 +137,7 @@ class PointTracker(TFNode):
 
     def handle_query_request(self, req: Query3DPoints.Request, resp: Query3DPoints.Response):
         with self.back_image_queue:
-            if len(self.back_image_queue) < 2:
+            if len(self.back_image_queue) < 8:
                 resp.success = False
                 return resp
             queue = self.back_image_queue.as_list()[::-1]
@@ -203,7 +205,7 @@ class PointTracker(TFNode):
         info = {
             "stamp": stamp,
             "frame_id": img_msg.header.frame_id,
-            "image": bridge.imgmsg_to_cv2(img_msg, desired_encoding="rgb8"),
+            "image": cv2.resize(bridge.imgmsg_to_cv2(img_msg, desired_encoding="rgb8"), (424, 240)),
             "pose": pose,
         }
         return info
@@ -212,10 +214,13 @@ class PointTracker(TFNode):
         if self.camera.tf_frame is None:
             self.logger.info("camera_tf_frame is NONE!")
             return
-
-        current_pos = self.lookup_transform(self.base_frame.value, self.camera.tf_frame, sync=False, as_matrix=True)[
+        if self.tf_buffer.can_transform(self.base_frame.value, self.camera.tf_frame, time=Time.from_msg(msg.header.stamp))==1:
+            current_pos = self.lookup_transform(self.base_frame.value, self.camera.tf_frame, sync=False, as_matrix=True)[
             :3, 3
         ]
+        else:
+            #self.logger.info("No valid TF tree yet")
+            return
         if self.movement_threshold.value and (
             not (self.last_pos is None or np.linalg.norm(current_pos - self.last_pos) > self.movement_threshold.value)
         ):

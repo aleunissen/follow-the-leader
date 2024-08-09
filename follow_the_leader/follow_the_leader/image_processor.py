@@ -22,7 +22,7 @@ class ImageProcessorNode(TFNode):
         super().__init__("image_processor_node", cam_info_topic="/camera/color/camera_info")
 
         # ROS2 params
-        self.movement_threshold = self.declare_parameter("movement_threshold", 0.075)
+        self.movement_threshold = self.declare_parameter("movement_threshold", 0.01)
         self.base_frame = self.declare_parameter("base_frame", "base_link")
         self.camera_topic_name = self.declare_parameter("camera_topic_name", Parameter.Type.STRING)
 
@@ -55,7 +55,7 @@ class ImageProcessorNode(TFNode):
         with self.lock:
             if self.image_processor is None and (self.camera.tf_frame or force_size):
                 if self.camera.tf_frame:
-                    size = (self.camera.width, self.camera.height)
+                    size = (424,240) #(self.camera.width, self.camera.height)
                 else:
                     size = force_size
                 self.image_processor = FlowGAN(
@@ -128,7 +128,9 @@ class ImageProcessorNode(TFNode):
                 self.last_pose = tf_mat
 
         img = bridge.imgmsg_to_cv2(msg, desired_encoding="rgb8")
-        mask = self.image_processor.process(img).mean(axis=2).astype(np.uint8)
+        # Resize the image to 424x240
+        resized_image = cv2.resize(img, (424, 240))
+        mask = self.image_processor.process(resized_image).mean(axis=2).astype(np.uint8)
         # Create a black image with the same size as the mask
         result = np.ones_like(mask)*255
         # Define the left and right regions
@@ -139,7 +141,6 @@ class ImageProcessorNode(TFNode):
         cv2.rectangle(result, right_region[:2], right_region[2:], (0), -1)
         # Combine the mask and result image using bitwise AND
         result = cv2.bitwise_and(result, mask)
-
         if self.just_activated:
             self.just_activated = False
             return
