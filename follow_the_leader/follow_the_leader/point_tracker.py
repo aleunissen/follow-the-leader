@@ -88,7 +88,7 @@ class PointTracker(TFNode):
         self.last_pos = None
 
         # Config
-        self.movement_threshold = self.declare_parameter("movement_threshold", 0.01 / 8)
+        self.movement_threshold = self.declare_parameter("movement_threshold", 0.0075 / 8)
         self.base_frame = self.declare_parameter("base_frame", "base_link")
         self.min_points = self.declare_parameter("min_points", 4)
         self.do_3d_point_estimation = True
