@@ -22,7 +22,7 @@ class ImageProcessorNode(TFNode):
         super().__init__("image_processor_node", cam_info_topic="/camera/color/camera_info")
 
         # ROS2 params
-        self.movement_threshold = self.declare_parameter("movement_threshold", 0.01)
+        self.movement_threshold = self.declare_parameter("movement_threshold", 0.0075)
         self.base_frame = self.declare_parameter("base_frame", "base_link")
         self.camera_topic_name = self.declare_parameter("camera_topic_name", Parameter.Type.STRING)
 
@@ -135,7 +135,7 @@ class ImageProcessorNode(TFNode):
         result = np.ones_like(mask)*255
         # Define the left and right regions
         left_region = (0, 0, 1*mask.shape[1] // 4, mask.shape[0])
-        right_region = (3 * mask.shape[1] // 4, 0, mask.shape[1], mask.shape[0])
+        right_region = (2*mask.shape[1] // 4, 0, mask.shape[1], mask.shape[0])
         # Fill the left and right regions with white color (255)
         cv2.rectangle(result, left_region[:2], left_region[2:], (0), -1)
         cv2.rectangle(result, right_region[:2], right_region[2:], (0), -1)
