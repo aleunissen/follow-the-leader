@@ -37,7 +37,7 @@ def generate_launch_description():
 
     camera_params_arg = DeclareLaunchArgument(
         name="camera_type",
-        default_value="d435",  # TODO: get this value from the orig launch file? Or declare it in the other file
+        default_value="d405",  # TODO: get this value from the orig launch file? Or declare it in the other file
         description="Path to the YAML file containing camera parameters",
     )
 
@@ -48,9 +48,10 @@ def generate_launch_description():
         launch_arguments=[
             ("enable_depth", "true"),
             ("pointcloud.enable", "false"),
-            ("rgb_camera.profile", "424x240x30"),
-            # ("rgb_camera.profile", "640x480x30"),
-            ("depth_module.profile", "424x240x30"),
+            # ("rgb_camera.profile", "424x240x30"),
+            # ("depth_module.profile", "424x240x30"),
+            ("rgb_camera.profile", "1280x720x30"),
+            ("depth_module.profile", "1280x720x30"),
         ],
         condition=UnlessCondition(use_sim),  # TODO: add unless condition for other camera makers
     )
@@ -141,12 +142,12 @@ def generate_launch_description():
             load_core_arg,
             launch_blender_arg,
             camera_params_arg,
-            ur_launch,
-            joy_node,
-            io_node,
+            # ur_launch,
+            # joy_node,
+            # io_node,
             realsense_launch,
-            core_launch,
-            blender_node,
+            # core_launch,
+            # blender_node,
             # ros_bag_execute
         ]
     )

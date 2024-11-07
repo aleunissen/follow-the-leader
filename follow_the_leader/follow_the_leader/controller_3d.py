@@ -39,7 +39,7 @@ class FollowTheLeaderController_3D_ROS(TFNode):
     """
 
     def __init__(self):
-        super().__init__("ftl_controller_3d", cam_info_topic="/camera/color/camera_info")
+        super().__init__("ftl_controller_3d", cam_info_topic="/camera/color/camera_info_low")
         # Config
 
         self.base_frame = self.declare_parameter("base_frame", "base_link")

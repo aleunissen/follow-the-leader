@@ -40,7 +40,7 @@ bridge = CvBridge()
 
 class Curve3DModeler(TFNode):
     def __init__(self):
-        super().__init__("curve_3d_model_node", cam_info_topic="/camera/color/camera_info")
+        super().__init__("curve_3d_model_node", cam_info_topic="/camera/color/camera_info_low")
 
         # ROS parameters
         params = {

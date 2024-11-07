@@ -12,13 +12,14 @@ from rclpy.executors import MultiThreadedExecutor
 from rclpy.parameter import Parameter
 from threading import Lock
 from scipy.spatial.transform import Rotation
+import cv2
 
 bridge = CvBridge()
 
 
 class ImageProcessorNode(TFNode):
     def __init__(self):
-        super().__init__("image_processor_node", cam_info_topic="/camera/color/camera_info")
+        super().__init__("image_processor_node", cam_info_topic="/camera/color/camera_info_low")
 
         # ROS2 params
         self.movement_threshold = self.declare_parameter("movement_threshold", 0.0075)
@@ -126,7 +127,9 @@ class ImageProcessorNode(TFNode):
                 vec = Vector3(x=movement[0], y=movement[1], z=movement[2])
                 self.last_pose = tf_mat
 
-        img = bridge.imgmsg_to_cv2(msg, desired_encoding="rgb8")
+        high_res_img = bridge.imgmsg_to_cv2(msg, desired_encoding="rgb8")
+        high_res_img_cropped = high_res_img[:,0:1272]
+        img = cv2.resize(high_res_img_cropped, (424,240), interpolation=cv2.INTER_NEAREST)
         mask = self.image_processor.process(img).mean(axis=2).astype(np.uint8)
         if self.just_activated:
             self.just_activated = False
