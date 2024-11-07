@@ -1,0 +1,7 @@
+/**:
+  ros__parameters:
+    camera_name: 'intel_realsense_d405'
+    camera_make: 'intel_realsense'
+    camera_model: 'd405'
+    camera_topic_name: "/camera/color/image_rect_raw"
+
