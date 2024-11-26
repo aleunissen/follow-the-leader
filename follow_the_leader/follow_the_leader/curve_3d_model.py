@@ -37,6 +37,7 @@ from scipy.interpolate import interp1d
 from scipy.spatial.transform import Rotation
 import pickle
 import cv2
+import time
 
 bridge = CvBridge()
 
@@ -843,12 +844,13 @@ class Curve3DModeler(TFNode):
             eval_pts = curve(np.linspace(0, 1, 200)).astype(int)
             cv2.polylines(diag_img, [eval_pts.reshape((-1, 1, 2))], False, (0, 0, 200), 3)
 
-        for sb_info in self.update_info.get("side_branches", []):
+        side_branches = self.update_info.get("side_branches", [])
+        for idx,sb_info in enumerate(side_branches):
             curve = sb_info["curve"]
             pxs = curve(np.linspace(0, 1, 20)).astype(int)
             cv2.polylines(diag_img, [pxs.reshape((-1, 1, 2))], False, (200, 0, 0), 3)
             saved_img = np.zeros(mask_img.shape) 
-            cv2.polylines(saved_img, [pxs.reshape((-1, 1, 2))], False, (200, 0, 0), 3)
+            cv2.polylines(saved_img, [pxs], False, (200, 0, 0), 3)
             self.save_mask(saved_img,f"branch_{idx}")
         # self.save_mask(diag_img,"diag_img")
         self.save_mask(mask_img,"mask")
