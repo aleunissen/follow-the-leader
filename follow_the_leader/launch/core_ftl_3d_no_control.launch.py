@@ -96,8 +96,8 @@ def generate_launch_description():
             camera_params_arg,
             state_manager_node,
             image_processor_node,
-            # point_tracker_node,
-            # modeling_node,
+            point_tracker_node,
+            modeling_node,
             # tf_node_b,
             # tf_node_c
             #controller_node,
