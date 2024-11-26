@@ -35,6 +35,7 @@ setup(
             "state_manager = follow_the_leader.simple_state_manager:main",
             "blender = follow_the_leader.blender_server_wrapper:main",
             "image_pub = follow_the_leader.offline_image_publisher:main",
+            "camera_info_low = follow_the_leader.camera_info_low:main",
         ],
     },
 )
