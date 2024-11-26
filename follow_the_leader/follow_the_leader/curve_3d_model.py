@@ -876,12 +876,19 @@ class Curve3DModeler(TFNode):
             cv2.polylines(diag_img, [pxs.reshape((-1, 1, 2))], False, (200, 0, 0), 3)
             saved_img = np.zeros(mask_img.shape) 
             cv2.polylines(saved_img, [pxs], False, (200, 0, 0), 3)
+            upscaled_img = np.zeros(bridge.imgmsg_to_cv2(self.update_info["rgb_msg"], desired_encoding="rgb8").shape)
+            upscaled_mask = cv2.resize(saved_img, (1272, 720), interpolation=cv2.INTER_CUBIC)
+            upscaled_img[:, 0:1272] = upscaled_mask
             self.save_mask(saved_img,f"branch_{idx}")
+            self.save_mask(upscaled_img,f"branch_{idx}")
         # self.save_mask(diag_img,"diag_img")
         self.save_mask(mask_img,"mask")
         if leader_est is not None:
-            self.save_mask(leader_est_img,"leader")
-        brg_img = self.update_info["rgb"]
+            upscaled_img = np.zeros(bridge.imgmsg_to_cv2(self.update_info["rgb_msg"], desired_encoding="rgb8").shape)
+            upscaled_mask = cv2.resize(leader_est_img, (1272, 720), interpolation=cv2.INTER_CUBIC)
+            upscaled_img[:, 0:1272] = upscaled_mask
+            self.save_mask(upscaled_img,"leader")
+        brg_img =  bridge.imgmsg_to_cv2(self.update_info["rgb_msg"], desired_encoding="rgb8")
         self.save_mask(cv2.cvtColor(brg_img, cv2.COLOR_BGR2RGB),"rgb")
 
         detection = self.update_info.get("detection", None)
