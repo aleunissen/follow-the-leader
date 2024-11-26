@@ -40,18 +40,25 @@ def generate_launch_description():
         default_value="d405",  # TODO: get this value from the orig launch file? Or declare it in the other file
         description="Path to the YAML file containing camera parameters",
     )
+    # Om een of andere reden lukt het mij nu ineens niet meer om de rgb stream naar 1280x720 te zetten met deze launch file
+    # Internet gaf me gelukkig wel een hint, op mijn lokale systeem heb ik de launch_rs.py even aangepast: 
+    # https://github.com/IntelRealSense/realsense-ros/issues/3090 
+
 
     realsense_launch = IncludeLaunchDescription(
         AnyLaunchDescriptionSource(
             os.path.join(get_package_share_directory("realsense2_camera"), "launch/rs_launch.py")
         ),
         launch_arguments=[
-            ("enable_depth", "true"),
-            ("pointcloud.enable", "false"),
+            ("enable_depth", "false"),
+            ("enable_color", "true"),
+            ("pointcloud.enable", "false"), 
             # ("rgb_camera.profile", "424x240x30"),
             # ("depth_module.profile", "424x240x30"),
-            ("rgb_camera.profile", "1280x720x30"),
-            ("depth_module.profile", "1280x720x30"),
+            ("rgb_camera.color_profile", "1280x720x30"),
+            ("depth_module.color_profile", "1280,720,30"),
+            ("depth_module.depth_profile", "424,240,30"),
+            ("depth_module.infra_profile", "1280,720,30"),
         ],
         condition=UnlessCondition(use_sim),  # TODO: add unless condition for other camera makers
     )
@@ -142,11 +149,11 @@ def generate_launch_description():
             load_core_arg,
             launch_blender_arg,
             camera_params_arg,
-            # ur_launch,
+            ur_launch,
             # joy_node,
             # io_node,
             realsense_launch,
-            # core_launch,
+            core_launch,
             # blender_node,
             # ros_bag_execute
         ]
