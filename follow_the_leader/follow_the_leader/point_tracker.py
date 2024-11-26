@@ -74,7 +74,7 @@ class RotatingQueue:
 
 class PointTracker(TFNode):
     def __init__(self):
-        super().__init__("point_tracker_node", cam_info_topic="/camera/color/camera_info")
+        super().__init__("point_tracker_node", cam_info_topic="/camera/color/camera_info_low")
         # State variables
 
         self.logger = get_logger("point_tracker")
@@ -201,7 +201,9 @@ class PointTracker(TFNode):
             pose = self.lookup_transform(
                 self.base_frame.value, self.camera.tf_frame, time=stamp, sync=True, as_matrix=True
             )
-
+        high_res_img = bridge.imgmsg_to_cv2(img_msg, desired_encoding="rgb8")
+        high_res_img_cropped = high_res_img[:,0:1272]
+        img = cv2.resize(high_res_img_cropped, (424,240), interpolation=cv2.INTER_NEAREST)
         info = {
             "stamp": stamp,
             "frame_id": img_msg.header.frame_id,

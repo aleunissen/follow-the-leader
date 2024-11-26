@@ -33,7 +33,7 @@ bridge = CvBridge()
 
 class VisualServoingNode(TFNode):
     def __init__(self):
-        super().__init__("visual_servoing_node", cam_info_topic="/camera/color/camera_info")
+        super().__init__("visual_servoing_node", cam_info_topic="/camera/color/camera_info_low")
 
         # Point tracking params
         self.fwd_speed = self.declare_parameter("forward_speed", 0.15)
