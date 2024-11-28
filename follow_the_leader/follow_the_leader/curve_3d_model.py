@@ -34,6 +34,7 @@ from scipy.interpolate import interp1d
 from scipy.spatial.transform import Rotation
 import pickle
 import cv2
+import time
 
 bridge = CvBridge()
 
@@ -823,6 +824,15 @@ class Curve3DModeler(TFNode):
             info[name]["pts_2d"] = np.array([(p.x, p.y) for p in group.points])
 
         return info
+    
+    def save_mask(self,mask_img,name):
+        output_dir = '/home/ubuntu/FTL/data/masks' # Update this to your desired directory
+        os.makedirs(output_dir, exist_ok=True)  # Ensure the directory exists        
+        # Generate a timestamp in the format YYYYMMDD_HHMMSS
+        timestamp = time.strftime("%Y%m%d_%H%M%S")
+        file_name = f"{output_dir}/{timestamp}_{name}.png"  # Add timestamp to the file name
+        cv2.imwrite(file_name, mask_img.astype(np.uint8))
+        print(f"Diagnostic image saved: {file_name}")
 
     def publish_diagnostic_image(self):
         if self.update_info.get("mask") is None:
@@ -862,10 +872,27 @@ class Curve3DModeler(TFNode):
             eval_pts = curve(np.linspace(0, 1, 200)).astype(int)
             cv2.polylines(diag_img, [eval_pts.reshape((-1, 1, 2))], False, (0, 0, 200), 3)
 
-        for sb_info in self.update_info.get("side_branches", []):
+        side_branches = self.update_info.get("side_branches", [])
+        for idx,sb_info in enumerate(side_branches):
             curve = sb_info["curve"]
             pxs = curve(np.linspace(0, 1, 20)).astype(int)
             cv2.polylines(diag_img, [pxs.reshape((-1, 1, 2))], False, (200, 0, 0), 3)
+            saved_img = np.zeros(mask_img.shape) 
+            cv2.polylines(saved_img, [pxs], False, (200, 0, 0), 3)
+            upscaled_img = np.zeros(bridge.imgmsg_to_cv2(self.update_info["rgb_msg"], desired_encoding="rgb8").shape)
+            upscaled_mask = cv2.resize(saved_img, (1272, 720), interpolation=cv2.INTER_CUBIC)
+            upscaled_img[:, 0:1272] = upscaled_mask
+            self.save_mask(saved_img,f"branch_{idx}")
+            self.save_mask(upscaled_img,f"branch_{idx}")
+        # self.save_mask(diag_img,"diag_img")
+        self.save_mask(mask_img,"mask")
+        if leader_est is not None:
+            upscaled_img = np.zeros(bridge.imgmsg_to_cv2(self.update_info["rgb_msg"], desired_encoding="rgb8").shape)
+            upscaled_mask = cv2.resize(leader_est_img, (1272, 720), interpolation=cv2.INTER_CUBIC)
+            upscaled_img[:, 0:1272] = upscaled_mask
+            self.save_mask(upscaled_img,"leader")
+        brg_img =  bridge.imgmsg_to_cv2(self.update_info["rgb_msg"], desired_encoding="rgb8")
+        self.save_mask(cv2.cvtColor(brg_img, cv2.COLOR_BGR2RGB),"rgb")
 
         detection = self.update_info.get("detection", None)
         if detection is not None:
