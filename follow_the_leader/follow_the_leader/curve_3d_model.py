@@ -62,6 +62,7 @@ class Curve3DModeler(TFNode):
         self.declare_parameter_dict(**params)
         self.camera_topic_name = self.declare_parameter("camera_topic_name", Parameter.Type.STRING)
         self.tracking_name = "model"
+        self.gripper_link = "tool_0"
 
         # State variables
         self.active = False
@@ -149,7 +150,7 @@ class Curve3DModeler(TFNode):
         return
 
     def start_modeling(self, *_, **__):
-        print("HELLO WORLD: " + self.camera_topic_name.get_parameter_value().string_value)
+        self.get_logger().info("HELLO WORLD: " + self.camera_topic_name.get_parameter_value().string_value)
 
         self.reset()
         self.last_pose = self.get_camera_frame_pose(position_only=False)
@@ -728,11 +729,12 @@ class Curve3DModeler(TFNode):
         prune_poses = []
 
         for i, side_branch in enumerate(self.current_side_branches, start=1):
-            pts = side_branch.retrieve_points(filter_none=True)
+
+            pts = side_branch.retrieve_points(inv_tf=np.identity(4), filter_none=True)
 
             # line strip representing side branch
             marker = Marker()
-            marker.header.frame_id = self.camera.tf_frame
+            marker.header.frame_id = "base_link"
             marker.header.stamp = time
             marker.ns = self.get_name()
             marker.id = i
@@ -744,37 +746,38 @@ class Curve3DModeler(TFNode):
 
             # point marker to visualize pruning location and publish it
             branch_origin = pts[0,:]
-            prune_origin = pts[3,:] # points are 0.01m apart, so [3,:] means coordinates 3cm from branch origin
-            # marker = Marker()
-            # marker.header.frame_id = self.camera.tf_frame
-            # marker.header.stamp = time
-            # marker.ns = self.get_name()
-            # marker.id = i
-            # marker.type = Marker.SPHERE
-            # marker.pose.position = Point(x=prune_origin[0],y=prune_origin[1],z=prune_origin[2])
-            # marker.scale.x = 0.01
-            # marker.scale.y = 0.01
-            # marker.scale.z = 0.01
-            # marker.color = ColorRGBA(r=1.0, g=0.0, b=0.0, a=1.0)
-            # markers.markers.append(marker)
+            if len(pts[:,0])>3:
+                prune_origin = pts[3,:] # points are 0.01m apart, so [3,:] means coordinates 3cm from branch origin
 
-            prune_pose = Pose()
-            prune_poses_msg.header.stamp = time
-            prune_poses_msg.header.frame_id = self.camera.tf_frame
-            prune_pose.position.x = prune_origin[0]
-            prune_pose.position.y = prune_origin[1]
-            prune_pose.position.z = prune_origin[2]
-            #TODO: correct prune orientation
-            prune_pose.orientation.x = 0.0
-            prune_pose.orientation.x = 0.0
-            prune_pose.orientation.x = 0.0
-            prune_pose.orientation.w = 1.0
-            prune_poses.append(prune_pose)
+                # self.get_logger().info(f"prune origin: {prune_origin[0]},{prune_origin[1]},{prune_origin[2]}")
+
+                prune_pose = Pose()
+                prune_poses_msg.header.stamp = time
+                prune_poses_msg.header.frame_id = "base_link"
+                # prune_pose.position.x = prune_origin[1] # -prune_origin y
+                # prune_pose.position.y = -prune_origin[0] + 1.0 # prune_origin x
+                # prune_pose.position.z = prune_origin[2] + 0.8 # prune_origin z
+                prune_pose.position.x = prune_origin[0] # prune_origin x
+                prune_pose.position.y = prune_origin[1] # prune_origin y
+                prune_pose.position.z = prune_origin[2] # prune_origin z
+                #TODO: correct prune orientation
+                tf = self.lookup_transform("base_link","tool0")
+                # prune_pose.orientation.x = -0.411 #tf.transform.rotation.x
+                # prune_pose.orientation.y = -0.411 #tf.transform.rotation.y
+                # prune_pose.orientation.z = -0.576 #tf.transform.rotation.z
+                # prune_pose.orientation.w = 0.576 #tf.transform.rotation.w
+                prune_pose.orientation.x = tf.transform.rotation.x
+                prune_pose.orientation.y = tf.transform.rotation.y
+                prune_pose.orientation.z = tf.transform.rotation.z
+                prune_pose.orientation.w = tf.transform.rotation.w
+
+                prune_poses.append(prune_pose)
+            else:
+                print("Branch is too short, skipping")
+
 
         prune_poses_msg.poses = prune_poses
         self.prune_pose_pub.publish(prune_poses_msg)
-
-
 
         self.rviz_model_pub.publish(markers)
 

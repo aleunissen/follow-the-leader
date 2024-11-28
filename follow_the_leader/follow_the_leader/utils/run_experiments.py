@@ -39,7 +39,7 @@ class ExperimentManagementNode(TFNode):
         self.folder = output_folder
 
         self.current_experiment = 0
-        self.num_branches = 0
+        self.num_branches = 3
         self.custom_seed = None
         self.bag_recording_proc = None
         self.save_counter = 0
@@ -372,6 +372,14 @@ class ExperimentManagementNode(TFNode):
                 "wrist_2_joint",
                 "wrist_3_joint",
             ]
+            # joint_names = [
+            #     "joint_1",
+            #     "joint_2",
+            #     "joint_3",
+            #     "joint_4",
+            #     "joint_5",
+            #     "joint_6",
+            # ]
 
             if isinstance(joints, JointState):
                 joints = joints.position
@@ -401,6 +409,7 @@ class ExperimentManagementNode(TFNode):
         goal_msg = MoveGroup.Goal()
         goal_msg.request = MotionPlanRequest(
             group_name="ur_manipulator",
+            # group_name="manipulator",
             goal_constraints=[Constraints(**kwargs)],
             allowed_planning_time=5.0,
         )
@@ -452,6 +461,9 @@ if __name__ == "__main__":
         sim = True
     elif mode == "ur5e":
         home_joints = [3.8675 - np.pi, -2.0459, -2.04105, 0.9304, 1.64812, 0.0]
+    elif mode == "abb":
+        # home_joints = [0.2, 1.0459, 0.0, 0.0, -1.0459, 0.0]
+        home_joints = [-1.57, 0.85, 0.34359, 0.0, -1.2459, 0.0]
     else:
         raise ValueError("Unsupported value {}".format(mode))
 
