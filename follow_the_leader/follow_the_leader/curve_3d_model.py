@@ -259,8 +259,10 @@ class Curve3DModeler(TFNode):
             stamp = self.last_mask_info.mask.header.stamp
 
         self.update_info["stamp"] = stamp
-        self.update_info["mask"] = mask
-        self.update_info["rgb"] = bridge.imgmsg_to_cv2(rgb_msg, desired_encoding="rgb8")
+        self.update_info["mask"] = mask        
+        high_res_img = bridge.imgmsg_to_cv2(rgb_msg, desired_encoding="rgb8")
+        high_res_img_cropped = high_res_img[:,0:1272]
+        self.update_info["rgb"] = cv2.resize(high_res_img_cropped, (424,240), interpolation=cv2.INTER_NEAREST)
         self.update_info["rgb_msg"] = rgb_msg
         self.update_info["tf"] = self.get_camera_frame_pose(time=stamp)
         self.update_info["inv_tf"] = np.linalg.inv(self.update_info["tf"])

@@ -227,8 +227,10 @@ class FollowTheLeaderController_3D_ROS(TFNode):
         cmd = TwistStamped()
         cmd.header.frame_id = self.tool_frame.value
         cmd.header.stamp = self.get_clock().now().to_msg()
-        cmd.twist.linear = Vector3(x=twist_tool[3], y=twist_tool[4], z=twist_tool[5])
-        cmd.twist.angular = Vector3(x=twist_tool[0], y=twist_tool[1], z=twist_tool[2])
+        cmd.twist.linear = Vector3(x=-self.ee_speed.value, y=0.0, z=0.0)
+        # cmd.twist.linear = Vector3(x=twist_tool[3], y=twist_tool[4], z=twist_tool[5])
+        # cmd.twist.angular = Vector3(x=twist_tool[0], y=twist_tool[1], z=twist_tool[2])
+        cmd.twist.angular = Vector3(x=0.0, y=0.0, z=0.0)
 
         self.pub.publish(cmd)
         return

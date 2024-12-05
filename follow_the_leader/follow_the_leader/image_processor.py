@@ -131,6 +131,17 @@ class ImageProcessorNode(TFNode):
         high_res_img_cropped = high_res_img[:,0:1272]
         img = cv2.resize(high_res_img_cropped, (424,240), interpolation=cv2.INTER_NEAREST)
         mask = self.image_processor.process(img).mean(axis=2).astype(np.uint8)
+
+        # Create a black image with the same size as the mask
+        result = np.ones_like(mask)*255
+        # Define the left and right regions
+        left_region = (0, 0, 1*mask.shape[1] // 4, mask.shape[0])
+        right_region = (3 * mask.shape[1] // 4, 0, mask.shape[1], mask.shape[0])
+        # Fill the left and right regions with white color (255)
+        cv2.rectangle(result, left_region[:2], left_region[2:], (0), -1)
+        cv2.rectangle(result, right_region[:2], right_region[2:], (0), -1)
+        # Combine the mask and result image using bitwise AND
+        result = cv2.bitwise_and(result, mask)
         if self.just_activated:
             self.just_activated = False
             return
@@ -139,7 +150,7 @@ class ImageProcessorNode(TFNode):
             self.last_skipped = False
             return
 
-        mask_msg = bridge.cv2_to_imgmsg(mask, encoding="mono8")
+        mask_msg = bridge.cv2_to_imgmsg(result, encoding="mono8")
         mask_msg.header.stamp = msg.header.stamp
         image_mask_pair = ImageMaskPair(rgb=msg, mask=mask_msg, image_frame_offset=vec)
 

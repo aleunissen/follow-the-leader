@@ -3,7 +3,7 @@ ftl_controller_3d:
     base_frame: 'base_link'
     tool_frame: 'tool0'
     min_height: 0.325
-    max_height: 1.25
+    max_height: 1.0
     ee_speed: 1.0
     k_centering: 1.0    # Horizontal centering constant - Scales the relative diff defined by (x - center) / img_width
     k_z: 1.0            # Scales the absolute difference between desired Z dist and Z of closest point on curve

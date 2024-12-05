@@ -364,22 +364,22 @@ class ExperimentManagementNode(TFNode):
                 raise ValueError("Please specify a pose or joints value to move to")
 
         if joints is not None:
-            joint_names = [
-                "shoulder_pan_joint",
-                "shoulder_lift_joint",
-                "elbow_joint",
-                "wrist_1_joint",
-                "wrist_2_joint",
-                "wrist_3_joint",
-            ]
             # joint_names = [
-            #     "joint_1",
-            #     "joint_2",
-            #     "joint_3",
-            #     "joint_4",
-            #     "joint_5",
-            #     "joint_6",
+            #     "shoulder_pan_joint",
+            #     "shoulder_lift_joint",
+            #     "elbow_joint",
+            #     "wrist_1_joint",
+            #     "wrist_2_joint",
+            #     "wrist_3_joint",
             # ]
+            joint_names = [
+                "joint_1",
+                "joint_2",
+                "joint_3",
+                "joint_4",
+                "joint_5",
+                "joint_6",
+            ]
 
             if isinstance(joints, JointState):
                 joints = joints.position
@@ -408,8 +408,8 @@ class ExperimentManagementNode(TFNode):
 
         goal_msg = MoveGroup.Goal()
         goal_msg.request = MotionPlanRequest(
-            group_name="ur_manipulator",
-            # group_name="manipulator",
+            # group_name="ur_manipulator",
+            group_name="manipulator",
             goal_constraints=[Constraints(**kwargs)],
             allowed_planning_time=5.0,
         )
@@ -463,7 +463,8 @@ if __name__ == "__main__":
         home_joints = [3.8675 - np.pi, -2.0459, -2.04105, 0.9304, 1.64812, 0.0]
     elif mode == "abb":
         # home_joints = [0.2, 1.0459, 0.0, 0.0, -1.0459, 0.0]
-        home_joints = [-1.57, 0.85, 0.34359, 0.0, -1.2459, 0.0]
+        # home_joints = [-1.57, 0.85, 0.34359, 0.0, -1.2459, 0.0]
+        home_joints = [-0.6789519325721193, 1.4777585277968694, -0.5045400297047149, 1.0842964504458374, -1.3368169855329874, -0.5334027370982348]
     else:
         raise ValueError("Unsupported value {}".format(mode))
 
