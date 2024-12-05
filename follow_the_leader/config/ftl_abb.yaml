@@ -2,9 +2,10 @@ ftl_controller_3d:
   ros__parameters:
     base_frame: 'base_link'
     tool_frame: 'tool0'
+    servo_command_frame: 'base_link'
     min_height: 0.325
     max_height: 1.0
-    ee_speed: 1.0
+    ee_speed: 0.1
     k_centering: 1.0    # Horizontal centering constant - Scales the relative diff defined by (x - center) / img_width
     k_z: 1.0            # Scales the absolute difference between desired Z dist and Z of closest point on curve
     z_desired: 0.25     # Distance to keep from modeled curve
@@ -50,7 +51,7 @@ visual_servoing_node:
     reprojection_error_ignore: 4.0      # If a 3D estimate has above the given error threshold, ignore it
     stop_dist: 0.0                      # At what Z dist from the target point should the robot stop?
     base_frame: 'base_link'
-    tool_frame: 'tool0'
+    tool_frame: 'base_link'
     target_frame: ''                    # If a frame_id is provided, will use the 2D projection of the frame to guide the cutter
     no_3d_est_scale: 0.2                # If no 3D estimate is available, will slow the cutter down
     servo_joint_state_dist: 0.005       # Joint states for the approach path will be sampled at this distance

@@ -44,6 +44,7 @@ class FollowTheLeaderController_3D_ROS(TFNode):
 
         self.base_frame = self.declare_parameter("base_frame", "base_link")
         self.tool_frame = self.declare_parameter("tool_frame", "tool0")
+        self.servo_command_frame = self.declare_parameter("servo_command_frame", "base_link")
         self.min_height = self.declare_parameter("min_height", 0.325)
         self.max_height = self.declare_parameter("max_height", 0.75)
         self.ee_speed = self.declare_parameter("ee_speed", 0.60)
@@ -225,9 +226,9 @@ class FollowTheLeaderController_3D_ROS(TFNode):
         twist_tool = self.to_publish
 
         cmd = TwistStamped()
-        cmd.header.frame_id = self.tool_frame.value
+        cmd.header.frame_id = self.servo_command_frame.value
         cmd.header.stamp = self.get_clock().now().to_msg()
-        cmd.twist.linear = Vector3(x=-self.ee_speed.value, y=0.0, z=0.0)
+        cmd.twist.linear = Vector3(x=0.0, y=0.0, z=self.ee_speed.value)
         # cmd.twist.linear = Vector3(x=twist_tool[3], y=twist_tool[4], z=twist_tool[5])
         # cmd.twist.angular = Vector3(x=twist_tool[0], y=twist_tool[1], z=twist_tool[2])
         cmd.twist.angular = Vector3(x=0.0, y=0.0, z=0.0)
